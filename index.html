@@ -1,0 +1,1312 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>小小探險家 · 英文單字樂園</title>
+  
+  <!-- Google Fonts: Fredoka & Nunito for kid-friendly playful typography -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;500;600;700&family=Nunito:wght@600;700;800;900&family=Noto+Sans+TC:wght@500;700;900&display=swap" rel="stylesheet">
+  
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  
+  <!-- Vue 3 Global Build -->
+  <script src="https://unpkg.com/vue@3/dist/vue.global.prod.js"></script>
+  
+  <!-- Canvas Confetti for Celebration Effects -->
+  <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: {
+            fredoka: ['Fredoka', 'Nunito', 'Noto Sans TC', 'sans-serif'],
+            sans: ['Nunito', 'Noto Sans TC', 'sans-serif']
+          },
+          colors: {
+            brand: {
+              yellow: '#FFDE59',
+              orange: '#FF914D',
+              coral: '#FF6F61',
+              blue: '#5CE1E6',
+              deepblue: '#38B6FF',
+              purple: '#CB6CE6',
+              green: '#7ED957'
+            }
+          },
+          animation: {
+            'bounce-soft': 'bounceSoft 2s infinite ease-in-out',
+            'wiggle': 'wiggle 0.5s ease-in-out',
+            'pulse-glow': 'pulseGlow 2s infinite'
+          },
+          keyframes: {
+            bounceSoft: {
+              '0%, 100%': { transform: 'translateY(0)' },
+              '50%': { transform: 'translateY(-8px)' }
+            },
+            wiggle: {
+              '0%, 100%': { transform: 'rotate(0deg)' },
+              '25%': { transform: 'rotate(-6deg)' },
+              '75%': { transform: 'rotate(6deg)' }
+            },
+            pulseGlow: {
+              '0%, 100%': { opacity: '1', transform: 'scale(1)' },
+              '50%': { opacity: '0.85', transform: 'scale(1.03)' }
+            }
+          }
+        }
+      }
+    }
+  </script>
+
+  <style>
+    body {
+      font-family: 'Nunito', 'Noto Sans TC', sans-serif;
+      user-select: none;
+      -webkit-tap-highlight-color: transparent;
+      background: radial-gradient(circle at 20% 20%, #FFFDF0 0%, #EBF8FF 50%, #F5F3FF 100%);
+      min-height: 100vh;
+    }
+
+    /* 3D Flip Card Container */
+    .flip-card-wrapper {
+      perspective: 1200px;
+      -webkit-perspective: 1200px;
+    }
+    .flip-card-inner {
+      position: relative;
+      width: 100%;
+      height: 100%;
+      text-align: center;
+      transition: transform 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+      -webkit-transition: -webkit-transform 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+      transform-style: preserve-3d;
+      -webkit-transform-style: preserve-3d;
+    }
+    .flip-card-inner.flipped {
+      transform: rotateY(180deg);
+      -webkit-transform: rotateY(180deg);
+    }
+    .flip-card-front, .flip-card-back {
+      position: absolute !important;
+      top: 0 !important;
+      left: 0 !important;
+      right: 0 !important;
+      bottom: 0 !important;
+      width: 100% !important;
+      height: 100% !important;
+      -webkit-backface-visibility: hidden !important;
+      backface-visibility: hidden !important;
+      border-radius: 2rem;
+      overflow: hidden;
+    }
+    .flip-card-front {
+      transform: rotateY(0deg);
+      -webkit-transform: rotateY(0deg);
+      z-index: 2;
+    }
+    .flip-card-back {
+      transform: rotateY(180deg);
+      -webkit-transform: rotateY(180deg);
+      z-index: 1;
+    }
+    .flip-card-inner.flipped .flip-card-front {
+      z-index: 1;
+    }
+    .flip-card-inner.flipped .flip-card-back {
+      z-index: 2;
+    }
+
+    /* Custom cute scrollbar */
+    ::-webkit-scrollbar {
+      width: 8px;
+      height: 8px;
+    }
+    ::-webkit-scrollbar-track {
+      background: rgba(255, 255, 255, 0.5);
+      border-radius: 10px;
+    }
+    ::-webkit-scrollbar-thumb {
+      background: #FFB347;
+      border-radius: 10px;
+    }
+    ::-webkit-scrollbar-thumb:hover {
+      background: #FF914D;
+    }
+  </style>
+</head>
+<body class="text-slate-800 antialiased overflow-x-hidden pb-12">
+
+  <div id="app" class="max-w-4xl mx-auto px-3 sm:px-6 pt-3 sm:pt-6">
+
+    <header class="bg-white/90 backdrop-blur-md rounded-3xl p-4 sm:p-6 shadow-xl shadow-amber-500/10 border-4 border-amber-200 mb-5 transition-all">
+      <div class="flex flex-wrap items-center justify-between gap-3">
+        <!-- Logo & Title -->
+        <div class="flex items-center space-x-3 cursor-pointer" @click="currentView = 'categories'">
+          <div class="w-13 h-13 sm:w-16 sm:h-16 bg-gradient-to-tr from-amber-400 to-yellow-300 rounded-2xl flex items-center justify-center shadow-md transform hover:rotate-6 transition">
+            <span class="text-3xl sm:text-4xl">🐾</span>
+          </div>
+          <div>
+            <div class="flex items-center space-x-2">
+              <h1 class="text-2xl sm:text-3xl font-black text-amber-900 tracking-wide font-fredoka">小小探險家</h1>
+              <span class="bg-amber-100 text-amber-800 text-xs sm:text-sm px-3 py-0.5 rounded-full font-black">1.1 & 1.2 總複習</span>
+            </div>
+            <p class="text-sm sm:text-base text-slate-500 font-bold">自然發音與繪本互動單字庫</p>
+          </div>
+        </div>
+
+        <!-- Quick Action Buttons -->
+        <div class="flex items-center space-x-2">
+          <!-- Voice Sound Toggle -->
+          <button @click="toggleSound" :title="soundEnabled ? '音效開啟' : '音效已靜音'" class="w-12 h-12 rounded-2xl flex items-center justify-center text-xl border-2 transition active:scale-95 shadow-sm" :class="soundEnabled ? 'bg-emerald-50 border-emerald-300 text-emerald-600' : 'bg-slate-100 border-slate-300 text-slate-400'">
+            {{ soundEnabled ? '🔔' : '🔕' }}
+          </button>
+          
+          <!-- Restart / Reset Progress Button -->
+          <button @click="openResetModal" title="重新學習所有單字" class="px-3.5 py-2.5 bg-rose-50 hover:bg-rose-100 text-rose-600 rounded-2xl border-2 border-rose-200 text-sm sm:text-base font-black flex items-center space-x-1.5 transition active:scale-95 shadow-sm">
+            <span class="text-lg">🔄</span>
+            <span>重置進度</span>
+          </button>
+        </div>
+      </div>
+
+      <div class="mt-4 pt-3 border-t border-amber-100">
+        <div class="flex justify-between items-center text-sm sm:text-base font-black mb-1.5 text-slate-700">
+          <div class="flex items-center space-x-2">
+            <span class="text-amber-500 text-lg sm:text-xl">⭐</span>
+            <span>全書總學習掌握度</span>
+          </div>
+          <span class="text-amber-600 text-base sm:text-xl font-black font-fredoka">{{ overallProgress }}%</span>
+        </div>
+        
+        <!-- Progress Bar Track -->
+        <div class="relative w-full h-5 sm:h-6 bg-amber-100 rounded-full overflow-hidden p-0.5 border-2 border-amber-200">
+          <div class="h-full bg-gradient-to-r from-amber-400 via-orange-400 to-emerald-400 rounded-full transition-all duration-700 ease-out shadow-inner" :style="{ width: overallProgress + '%' }"></div>
+        </div>
+
+        <!-- Badges & Statistics Row -->
+        <div class="flex flex-wrap items-center justify-between text-xs sm:text-sm text-slate-600 mt-2.5 font-black gap-2 px-1">
+          <span>📖 已學單字：<b class="text-indigo-600 text-sm sm:text-base">{{ totalLearnedCount }}</b> / {{ allWords.length }} 個</span>
+          <span>🎯 測驗過關：<b class="text-emerald-600 text-sm sm:text-base">{{ totalQuizPassedCount }}</b> / {{ allWords.length }} 個</span>
+          <span class="cursor-pointer text-rose-500 hover:underline inline-flex items-center space-x-1" @click="goToMistakes">
+            <span>📕 錯題本：<b class="text-rose-600 text-sm sm:text-base">{{ mistakeList.length }}</b> 個</span>
+          </span>
+        </div>
+      </div>
+    </header>
+
+    <nav class="flex items-center justify-center gap-1.5 sm:gap-3 mb-6 bg-white/80 backdrop-blur-sm p-2 rounded-2xl shadow-sm border border-slate-200">
+      <button @click="currentView = 'categories'" class="flex-1 py-3 sm:py-3.5 px-2 rounded-xl text-sm sm:text-base font-black transition flex items-center justify-center space-x-1" :class="currentView === 'categories' ? 'bg-gradient-to-r from-amber-400 to-orange-400 text-white shadow-md' : 'text-slate-600 hover:bg-white/80'">
+        <span class="text-base sm:text-lg">🗂️</span>
+        <span>單字主題</span>
+      </button>
+
+      <button @click="startFlashcards(currentCategoryKey)" class="flex-1 py-3 sm:py-3.5 px-2 rounded-xl text-sm sm:text-base font-black transition flex items-center justify-center space-x-1" :class="currentView === 'flashcards' ? 'bg-gradient-to-r from-sky-400 to-blue-500 text-white shadow-md' : 'text-slate-600 hover:bg-white/80'">
+        <span class="text-base sm:text-lg">🎴</span>
+        <span>翻翻字卡</span>
+      </button>
+
+      <button @click="startSpellingQuiz(currentCategoryKey)" class="flex-1 py-3 sm:py-3.5 px-2 rounded-xl text-sm sm:text-base font-black transition flex items-center justify-center space-x-1" :class="currentView === 'spelling' ? 'bg-gradient-to-r from-purple-400 to-pink-500 text-white shadow-md' : 'text-slate-600 hover:bg-white/80'">
+        <span class="text-base sm:text-lg">✏️</span>
+        <span>拼寫測驗</span>
+      </button>
+
+      <button @click="goToMistakes" class="relative flex-1 py-3 sm:py-3.5 px-2 rounded-xl text-sm sm:text-base font-black transition flex items-center justify-center space-x-1" :class="currentView === 'mistakes' ? 'bg-gradient-to-r from-rose-400 to-red-500 text-white shadow-md' : 'text-slate-600 hover:bg-white/80'">
+        <span class="text-base sm:text-lg">📕</span>
+        <span>錯題強化</span>
+        <span v-if="mistakeList.length > 0" class="absolute -top-1.5 -right-1 bg-red-500 text-white text-xs w-6 h-6 rounded-full flex items-center justify-center border-2 border-white font-black animate-pulse">
+          {{ mistakeList.length }}
+        </span>
+      </button>
+    </nav>
+
+    <main v-if="currentView === 'categories'" class="space-y-4">
+      <div class="flex items-center justify-between px-2">
+        <h2 class="text-xl sm:text-2xl font-black text-slate-800 flex items-center space-x-2">
+          <span>🌟 請選擇學習主題</span>
+          <span class="text-sm bg-amber-100 text-amber-900 font-bold px-2.5 py-0.5 rounded-full">共 {{ categories.length }} 大類</span>
+        </h2>
+        <button @click="startFlashcards('all')" class="text-sm sm:text-base font-black text-sky-600 hover:text-sky-700 bg-sky-50 px-3.5 py-2 rounded-xl border border-sky-200">
+          全部單字練習 ({{ allWords.length }}) &rarr;
+        </button>
+      </div>
+
+      <!-- Categories Grid -->
+      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+        <div v-for="cat in categories" :key="cat.key" class="bg-white rounded-3xl p-5 sm:p-6 shadow-lg shadow-slate-200/50 border-3 border-transparent hover:border-amber-300 transition-all transform hover:-translate-y-1 relative overflow-hidden group">
+          <!-- Background Deco Icon -->
+          <div class="absolute -right-2 -bottom-2 text-7xl opacity-10 group-hover:scale-110 transition pointer-events-none">
+            {{ cat.icon }}
+          </div>
+
+          <div class="flex items-center space-x-3 mb-3.5">
+            <div class="w-14 h-14 rounded-2xl flex items-center justify-center text-3xl shadow-sm" :class="cat.bgColor">
+              {{ cat.icon }}
+            </div>
+            <div>
+              <h3 class="font-black text-slate-800 text-lg sm:text-xl leading-tight">{{ cat.name }}</h3>
+              <p class="text-sm text-slate-400 font-bold mt-0.5">{{ cat.words.length }} 個單字</p>
+            </div>
+          </div>
+
+          <!-- Progress Bar inside Category Card -->
+          <div class="space-y-2 mb-4">
+            <div class="flex justify-between text-sm font-black">
+              <span class="text-slate-500">複習與掌握度</span>
+              <span class="text-amber-600 font-black text-base">{{ getCategoryProgress(cat.key) }}%</span>
+            </div>
+            <div class="w-full h-3.5 bg-slate-100 rounded-full overflow-hidden">
+              <div class="h-full rounded-full transition-all duration-500" :class="getCategoryProgress(cat.key) === 100 ? 'bg-emerald-400' : 'bg-amber-400'" :style="{ width: getCategoryProgress(cat.key) + '%' }"></div>
+            </div>
+            <div class="flex justify-between text-xs sm:text-sm text-slate-400 font-bold">
+              <span>卡片：{{ getCategoryLearnedCount(cat.key) }}/{{ cat.words.length }}</span>
+              <span>拼寫：{{ getCategoryQuizPassedCount(cat.key) }}/{{ cat.words.length }}</span>
+            </div>
+          </div>
+
+          <!-- Action Buttons for this Category -->
+          <div class="grid grid-cols-2 gap-2 pt-2 border-t border-slate-100">
+            <button @click="startFlashcards(cat.key)" class="py-3 px-3 bg-sky-50 hover:bg-sky-100 text-sky-700 font-black rounded-xl text-sm sm:text-base flex items-center justify-center space-x-1.5 transition active:scale-95">
+              <span>🎴 看字卡</span>
+            </button>
+            <button @click="startSpellingQuiz(cat.key)" class="py-3 px-3 bg-purple-50 hover:bg-purple-100 text-purple-700 font-black rounded-xl text-sm sm:text-base flex items-center justify-center space-x-1.5 transition active:scale-95">
+              <span>✏️ 拼寫測驗</span>
+            </button>
+          </div>
+        </div>
+      </div>
+    </main>
+
+    <main v-if="currentView === 'flashcards'" class="max-w-xl mx-auto space-y-4">
+      <!-- Card Header: Title & Progress Percentage -->
+      <div class="flex items-center justify-between bg-white/80 backdrop-blur rounded-2xl px-4 py-3 shadow-sm border border-slate-200">
+        <button @click="currentView = 'categories'" class="text-sm sm:text-base font-black text-slate-500 hover:text-slate-800 flex items-center space-x-1">
+          <span>&larr; 返回分類</span>
+        </button>
+        <div class="text-center">
+          <span class="text-xs sm:text-sm text-slate-400 font-bold block">{{ currentCategoryName }}</span>
+          <span class="text-sm sm:text-base font-black text-amber-600 font-fredoka">
+            進度：{{ activeCategoryLearnedPercent }}% ({{ currentCardIndex + 1 }} / {{ activeWordList.length }})
+          </span>
+        </div>
+        <button @click="startSpellingQuiz(currentCategoryKey)" class="text-sm sm:text-base font-black text-purple-600 hover:text-purple-700 bg-purple-50 px-3 py-1.5 rounded-xl border border-purple-200">
+          進入測驗 &rarr;
+        </button>
+      </div>
+
+      <!-- Flashcard Progress Bar -->
+      <div class="w-full h-3 bg-slate-200 rounded-full overflow-hidden">
+        <div class="h-full bg-gradient-to-r from-sky-400 to-blue-500 transition-all duration-300" :style="{ width: ((currentCardIndex + 1) / activeWordList.length * 100) + '%' }"></div>
+      </div>
+
+      <!-- 3D Flip Card Container -->
+      <div class="flip-card-wrapper h-[440px] sm:h-[480px] cursor-pointer relative" @click="toggleCardFlip">
+        <div class="flip-card-inner shadow-2xl rounded-[2rem] w-full h-full" :class="{ 'flipped': isCardFlipped }">
+          
+          <!-- Card Front -->
+          <div class="flip-card-front absolute inset-0 bg-gradient-to-b from-white to-sky-50/70 border-4 border-sky-200 p-6 sm:p-8 flex flex-col justify-between items-center shadow-lg">
+            <!-- Header Badges -->
+            <div class="w-full flex justify-between items-center">
+              <span class="bg-sky-100 text-sky-800 text-sm font-black px-3.5 py-1 rounded-full">
+                {{ currentWord.categoryName }}
+              </span>
+              <span class="text-sm font-black text-slate-400 flex items-center space-x-1">
+                <span class="text-base">🔄</span>
+                <span>點擊翻面</span>
+              </span>
+            </div>
+
+            <!-- Big Cute Icon & Word -->
+            <div class="my-auto text-center space-y-4">
+              <div class="text-7xl sm:text-8xl animate-bounce-soft filter drop-shadow-md">
+                {{ currentWord.icon }}
+              </div>
+              <h2 class="text-5xl sm:text-6xl font-black text-slate-800 tracking-wide font-fredoka">
+                {{ currentWord.word }}
+              </h2>
+              
+              <!-- Pronunciation Button -->
+              <button @click.stop="speak(currentWord.word)" class="inline-flex items-center space-x-2 bg-gradient-to-r from-sky-400 to-deepblue text-white px-6 py-3 rounded-full font-black text-base sm:text-lg shadow-md hover:scale-105 active:scale-95 transition">
+                <span class="text-2xl">🔊</span>
+                <span class="tracking-wider">聽單字發音</span>
+              </button>
+            </div>
+
+            <!-- Example Sentence -->
+            <div class="w-full bg-white/95 rounded-2xl p-4 border border-sky-100 flex items-center justify-between text-left shadow-sm">
+              <p class="text-base sm:text-lg font-bold text-slate-700 pr-2 leading-snug">
+                &ldquo;{{ currentWord.example }}&rdquo;
+              </p>
+              <button @click.stop="speak(currentWord.example)" class="text-sky-500 hover:text-sky-700 text-xl p-2 shrink-0 rounded-xl bg-sky-50 active:scale-95" title="朗讀例句">
+                🔊
+              </button>
+            </div>
+          </div>
+
+          <!-- Card Back -->
+          <div class="flip-card-back absolute inset-0 bg-gradient-to-b from-amber-50 to-orange-50/80 border-4 border-amber-300 p-6 sm:p-8 flex flex-col justify-between items-center text-center shadow-lg">
+            <div class="w-full flex justify-between items-center">
+              <span class="bg-amber-200 text-amber-900 text-sm font-black px-3.5 py-1 rounded-full">
+                中文釋義
+              </span>
+              <span class="text-sm font-black text-slate-400 flex items-center space-x-1">
+                <span class="text-base">🔄</span>
+                <span>點擊翻回</span>
+              </span>
+            </div>
+
+            <div class="my-auto space-y-3">
+              <span class="text-6xl sm:text-7xl block">{{ currentWord.icon }}</span>
+              <h3 class="text-4xl sm:text-5xl font-black text-amber-900">
+                {{ currentWord.meaning }}
+              </h3>
+              <p class="text-2xl sm:text-3xl font-black text-slate-600 font-fredoka tracking-wide">
+                {{ currentWord.word }}
+              </p>
+              
+              <!-- Story tag -->
+              <div v-if="currentWord.source" class="inline-block bg-orange-100 text-orange-900 text-xs sm:text-sm px-3.5 py-1 rounded-full font-black">
+                📖 出自故事：{{ currentWord.source }}
+              </div>
+            </div>
+
+            <!-- Example Sentence Translation -->
+            <div class="w-full bg-white/95 rounded-2xl p-4 border border-amber-200 text-left shadow-sm">
+              <div class="text-sm text-amber-900 font-black mb-1">例句中譯：</div>
+              <p class="text-base sm:text-lg text-slate-800 font-bold leading-snug">
+                {{ currentWord.exampleZh }}
+              </p>
+            </div>
+          </div>
+
+        </div>
+      </div>
+
+      <div class="flex items-center justify-between gap-3 pt-2">
+        <button @click="prevCard" class="flex-1 py-3.5 sm:py-4 bg-white hover:bg-slate-50 text-slate-700 font-black rounded-2xl border-2 border-slate-200 shadow-sm active:scale-95 transition text-base sm:text-lg flex items-center justify-center space-x-1">
+          <span>⬅️</span>
+          <span>上一張</span>
+        </button>
+
+        <button @click="markAsLearned(currentWord.id)" class="flex-1 py-3.5 sm:py-4 font-black rounded-2xl shadow-md active:scale-95 transition text-base sm:text-lg flex items-center justify-center space-x-1" :class="isWordLearned(currentWord.id) ? 'bg-emerald-500 hover:bg-emerald-600 text-white border-2 border-emerald-600' : 'bg-emerald-50 text-emerald-800 border-2 border-emerald-300 hover:bg-emerald-100'">
+          <span>{{ isWordLearned(currentWord.id) ? '✨ 已記熟' : '✔️ 標記記熟' }}</span>
+        </button>
+
+        <button @click="nextCard" class="flex-1 py-3.5 sm:py-4 bg-gradient-to-r from-amber-400 to-orange-400 hover:from-amber-500 hover:to-orange-500 text-white font-black rounded-2xl shadow-md active:scale-95 transition text-base sm:text-lg flex items-center justify-center space-x-1">
+          <span>下一張</span>
+          <span>➡️</span>
+        </button>
+      </div>
+    </main>
+
+    <main v-if="currentView === 'spelling'" class="max-w-xl mx-auto space-y-4">
+      <!-- Quiz Header -->
+      <div class="flex items-center justify-between bg-white/80 backdrop-blur rounded-2xl px-4 py-3 shadow-sm border border-slate-200">
+        <button @click="currentView = 'categories'" class="text-sm sm:text-base font-black text-slate-500 hover:text-slate-800">
+          &larr; 返回分類
+        </button>
+        <div class="text-center">
+          <span class="text-xs sm:text-sm text-purple-700 font-black block">{{ isIntensiveQuiz ? '🎯 錯題強化特訓中' : currentCategoryName }}</span>
+          <span class="text-sm sm:text-base font-black text-slate-700 font-fredoka">
+            測驗進度：{{ activeCategoryQuizPercent }}% (第 {{ currentQuizIndex + 1 }} / {{ quizWordList.length }} 題)
+          </span>
+        </div>
+        <div class="text-sm sm:text-base font-black bg-purple-100 text-purple-800 px-3 py-1.5 rounded-xl">
+          得分: {{ quizScore }}
+        </div>
+      </div>
+
+      <!-- Quiz Progress Bar -->
+      <div class="w-full h-3 bg-slate-200 rounded-full overflow-hidden">
+        <div class="h-full bg-gradient-to-r from-purple-400 to-pink-500 transition-all duration-300" :style="{ width: ((currentQuizIndex + 1) / quizWordList.length * 100) + '%' }"></div>
+      </div>
+
+      <!-- Question Card -->
+      <div class="bg-white rounded-3xl p-6 sm:p-8 shadow-xl border-4 border-purple-200 text-center space-y-4 relative overflow-hidden">
+        <!-- Badge & Lives (3 Strikes) -->
+        <div class="flex justify-between items-center">
+          <span class="bg-purple-100 text-purple-900 text-sm font-black px-3.5 py-1 rounded-full">
+            拼寫大考驗
+          </span>
+          <div class="flex items-center space-x-1" title="三次錯誤會記錄於錯題本">
+            <span class="text-sm font-black text-slate-500 mr-1">機會：</span>
+            <span class="text-lg sm:text-xl" :class="quizAttemptsLeft >= 1 ? 'opacity-100' : 'opacity-20'">❤️</span>
+            <span class="text-lg sm:text-xl" :class="quizAttemptsLeft >= 2 ? 'opacity-100' : 'opacity-20'">❤️</span>
+            <span class="text-lg sm:text-xl" :class="quizAttemptsLeft >= 3 ? 'opacity-100' : 'opacity-20'">❤️</span>
+          </div>
+        </div>
+
+        <!-- Clue / Illustration -->
+        <div class="py-2">
+          <div class="text-7xl sm:text-8xl mb-2 filter drop-shadow animate-pulse-glow">
+            {{ currentQuizWord.icon }}
+          </div>
+          <div class="text-3xl sm:text-4xl font-black text-slate-800 mb-1">
+            {{ currentQuizWord.meaning }}
+          </div>
+          <p class="text-sm sm:text-base text-slate-500 font-bold">
+            請聽發音或看中文拼出正確的英文單字！
+          </p>
+        </div>
+
+        <!-- Pronunciation Play Button -->
+        <div>
+          <button @click="speak(currentQuizWord.word)" class="bg-purple-100 hover:bg-purple-200 text-purple-900 px-5 py-2.5 rounded-full font-black text-base sm:text-lg inline-flex items-center space-x-2 transition active:scale-95 shadow-sm">
+            <span class="text-xl">🔊</span>
+            <span>聽單字發音</span>
+          </button>
+        </div>
+
+        <div class="bg-purple-50/80 rounded-2xl p-4 border border-purple-100 text-slate-800 text-base sm:text-lg font-bold">
+          <div class="text-purple-900 font-black mb-1 text-sm sm:text-base">例句填空：</div>
+          <span>&ldquo;{{ quizSentenceBlank }}&rdquo;</span>
+        </div>
+
+        <!-- 2nd Strike Hint Alert Box (Shows first & last letter) -->
+        <div v-if="quizHintActive" class="bg-amber-50 border-2 border-amber-300 rounded-2xl p-3.5 text-amber-900 animate-wiggle">
+          <div class="text-sm sm:text-base font-black text-amber-800 mb-1">💡 救援提示（頭尾字母已給出）：</div>
+          <div class="text-3xl sm:text-4xl font-black font-fredoka tracking-widest text-amber-900">
+            {{ letterHintString }}
+          </div>
+        </div>
+
+        <!-- 3rd Strike Answer Reveal Banner -->
+        <div v-if="quizAnswerRevealed" class="bg-rose-50 border-2 border-rose-300 rounded-2xl p-4 text-rose-900">
+          <div class="text-sm sm:text-base font-black text-rose-700 mb-1">別灰心！正確答案是：</div>
+          <div class="text-3xl sm:text-4xl font-black font-fredoka text-rose-700 tracking-wider">
+            {{ currentQuizWord.word }}
+          </div>
+          <p class="text-xs sm:text-sm text-rose-500 font-bold mt-1.5">已自動加入「錯題本」，待會可以到錯題本加強複習喔！</p>
+        </div>
+
+        <!-- User Input Area -->
+        <form @submit.prevent="submitQuizAnswer" class="space-y-3 pt-2">
+          <div class="relative">
+            <input 
+              ref="quizInputRef"
+              v-model="userSpellingInput"
+              :disabled="quizAnswerRevealed"
+              type="text" 
+              placeholder="在此輸入單字..."
+              autocomplete="off"
+              autocorrect="off"
+              autocapitalize="off"
+              spellcheck="false"
+              class="w-full text-center text-3xl sm:text-4xl font-black tracking-widest text-purple-900 bg-slate-50 border-3 border-purple-300 focus:border-purple-500 focus:bg-white rounded-2xl py-3.5 px-4 outline-none transition uppercase font-fredoka shadow-inner"
+            >
+          </div>
+
+          <!-- On-screen Scrambled Letter Tiles for Mobile/Tablet ease -->
+          <div class="flex flex-wrap items-center justify-center gap-2 pt-1.5">
+            <button 
+              type="button" 
+              v-for="(letter, idx) in availableLetterTiles" 
+              :key="idx"
+              @click="addLetter(letter)"
+              :disabled="quizAnswerRevealed"
+              class="w-11 h-11 sm:w-12 sm:h-12 bg-white hover:bg-purple-100 border-2 border-purple-200 text-purple-900 rounded-xl font-black text-xl sm:text-2xl shadow-sm active:scale-90 transition font-fredoka flex items-center justify-center"
+            >
+              {{ letter }}
+            </button>
+            <button 
+              type="button" 
+              @click="deleteLetter"
+              :disabled="quizAnswerRevealed"
+              class="px-3 h-11 sm:h-12 bg-rose-50 hover:bg-rose-100 border-2 border-rose-200 text-rose-700 rounded-xl font-black text-sm sm:text-base shadow-sm active:scale-90 transition flex items-center justify-center"
+              title="倒退刪除"
+            >
+              ⌫ 刪除
+            </button>
+          </div>
+
+          <!-- Submit / Next Button -->
+          <div class="pt-2">
+            <button 
+              v-if="!quizAnswerRevealed"
+              type="submit" 
+              class="w-full py-4 bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white font-black text-xl sm:text-2xl rounded-2xl shadow-lg active:scale-98 transition flex items-center justify-center space-x-2"
+            >
+              <span>送出檢查答案</span>
+              <span>🚀</span>
+            </button>
+
+            <button 
+              v-else
+              type="button"
+              @click="nextQuizQuestion" 
+              class="w-full py-4 bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-600 hover:to-teal-600 text-white font-black text-xl sm:text-2xl rounded-2xl shadow-lg active:scale-98 transition flex items-center justify-center space-x-2 animate-bounce-soft"
+            >
+              <span>前往下一題</span>
+              <span>➡️</span>
+            </button>
+          </div>
+        </form>
+
+        <!-- Feedback Alert Message -->
+        <div v-if="quizFeedbackMessage" class="text-base sm:text-lg font-black transition-all" :class="quizFeedbackIsError ? 'text-rose-600' : 'text-emerald-600'">
+          {{ quizFeedbackMessage }}
+        </div>
+      </div>
+    </main>
+
+    <main v-if="currentView === 'mistakes'" class="space-y-4">
+      <!-- Mistake Header Banner -->
+      <div class="bg-gradient-to-r from-rose-500 to-red-500 rounded-3xl p-5 sm:p-6 text-white shadow-lg flex flex-wrap items-center justify-between gap-4">
+        <div class="space-y-1">
+          <div class="flex items-center space-x-2">
+            <span class="text-3xl sm:text-4xl">📕</span>
+            <h2 class="text-2xl sm:text-3xl font-black">專屬錯題強化本</h2>
+          </div>
+          <p class="text-sm sm:text-base text-rose-100 font-bold">
+            練習拼錯三次的單字會在這裡集合。答對即可自動消滅移出！
+          </p>
+        </div>
+
+        <div class="flex items-center space-x-3">
+          <div class="bg-white/20 backdrop-blur-sm rounded-2xl px-4 py-2.5 text-center border border-white/30">
+            <div class="text-xs sm:text-sm text-rose-100 font-black">待攻克單字</div>
+            <div class="text-3xl font-black font-fredoka">{{ mistakeList.length }}</div>
+          </div>
+
+          <button 
+            v-if="mistakeList.length > 0"
+            @click="startIntensiveQuiz"
+            class="bg-yellow-400 hover:bg-yellow-300 text-yellow-950 font-black px-5 py-3.5 rounded-2xl shadow-md active:scale-95 transition text-base sm:text-lg flex items-center space-x-1.5"
+          >
+            <span>🚀</span>
+            <span>啟動加強測驗</span>
+          </button>
+        </div>
+      </div>
+
+      <div v-if="mistakeList.length === 0" class="bg-white rounded-3xl p-8 sm:p-12 text-center border-4 border-dashed border-emerald-200 space-y-4">
+        <div class="text-6xl sm:text-7xl">🎉</div>
+        <h3 class="text-2xl sm:text-3xl font-black text-emerald-700">太棒了！錯題本空空如也！</h3>
+        <p class="text-slate-600 text-base sm:text-lg font-bold max-w-md mx-auto">
+          你目前沒有任何未克服的錯題單字，真是太厲害了！繼續保持全對的紀錄吧！
+        </p>
+        <button @click="currentView = 'categories'" class="bg-gradient-to-r from-emerald-500 to-teal-500 text-white font-black px-6 py-3 rounded-2xl shadow-md hover:scale-105 transition text-base sm:text-lg">
+          挑選其他主題繼續挑戰 &rarr;
+        </button>
+      </div>
+
+      <div v-else class="space-y-3">
+        <div class="text-sm text-slate-500 font-black px-2 flex justify-between">
+          <span>點擊發音或卡片進行複習，點擊「啟動加強測驗」考驗自己！</span>
+          <span>共 {{ mistakeList.length }} 個錯題</span>
+        </div>
+
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+          <div v-for="word in mistakeList" :key="word.id" class="bg-white rounded-2xl p-4 sm:p-5 shadow-sm border-2 border-rose-100 hover:border-rose-300 flex items-center justify-between transition">
+            <div class="flex items-center space-x-3">
+              <span class="text-4xl">{{ word.icon }}</span>
+              <div>
+                <div class="flex items-center space-x-2">
+                  <h4 class="font-black text-slate-800 text-xl sm:text-2xl font-fredoka">{{ word.word }}</h4>
+                  <span class="bg-rose-100 text-rose-800 text-xs sm:text-sm px-2.5 py-0.5 rounded-full font-black">錯 {{ word.mistakeCount }} 次</span>
+                </div>
+                <p class="text-base text-slate-500 font-bold">{{ word.meaning }}</p>
+              </div>
+            </div>
+
+            <div class="flex items-center space-x-2">
+              <button @click="speak(word.word)" class="w-11 h-11 rounded-xl bg-purple-50 hover:bg-purple-100 text-purple-700 flex items-center justify-center text-lg shadow-sm transition active:scale-90" title="朗讀">
+                🔊
+              </button>
+              <button @click="quickRemoveMistake(word.id)" class="w-11 h-11 rounded-xl bg-slate-50 hover:bg-rose-50 text-slate-400 hover:text-rose-600 flex items-center justify-center text-base shadow-sm transition active:scale-90" title="直接移除錯題">
+                ✕
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </main>
+
+    <div v-if="showResetModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+      <div class="bg-white rounded-3xl p-6 sm:p-8 max-w-sm w-full text-center shadow-2xl border-4 border-amber-300 space-y-4 animate-wiggle">
+        <div class="text-6xl">🔄</div>
+        <h3 class="text-2xl font-black text-slate-800">確定要重新開始嗎？</h3>
+        <p class="text-sm sm:text-base text-slate-600 font-bold leading-relaxed">
+          這將會重置你的單字卡翻閱進度、測驗成績與錯題記錄，讓你可以從頭開始挑戰哦！
+        </p>
+        <div class="flex items-center space-x-2 pt-2">
+          <button @click="showResetModal = false" class="flex-1 py-3 bg-slate-100 hover:bg-slate-200 text-slate-700 font-black rounded-xl text-base transition">
+            再想想
+          </button>
+          <button @click="confirmResetProgress" class="flex-1 py-3 bg-rose-500 hover:bg-rose-600 text-white font-black rounded-xl text-base shadow-md transition">
+            好，重新開始！
+          </button>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <script>
+    const { createApp, ref, computed, onMounted, nextTick } = Vue;
+
+    // Comprehensive Vocabulary Database from Books 1.1 & 1.2
+    const RAW_VOCABULARY = [
+      // 1. Animals & Bugs (動物與昆蟲)
+      { id: 'cat', word: 'cat', meaning: '貓', icon: '🐱', category: 'animals', example: 'Pam has a cat. He is Max.', exampleZh: 'Pam 有一隻貓，名叫 Max。', source: 'Book 1.1 Max, the Cat' },
+      { id: 'dog', word: 'dog', meaning: '狗', icon: '🐶', category: 'animals', example: 'The dog likes to run outside.', exampleZh: '小狗喜歡在外面奔跑。', source: 'Book 1.1 Max, the Cat' },
+      { id: 'pup', word: 'pup', meaning: '小狗', icon: '🐕', category: 'animals', example: 'You are one good Pup!', exampleZh: '你是一隻很棒的小狗！', source: 'Book 1.2 One Good Pup' },
+      { id: 'pig', word: 'pig', meaning: '小豬', icon: '🐷', category: 'animals', example: 'On Monday, Pig picks a wig.', exampleZh: '星期一，小豬挑選了一頂假髮。', source: 'Book 1.1 What Does Pig Do?' },
+      { id: 'hog', word: 'hog', meaning: '豬 (大豬)', icon: '🐗', category: 'animals', example: 'Sal the hog is hot, so hot.', exampleZh: '大豬 Sal 覺得好熱好熱。', source: 'Book 1.2 A Vet' },
+      { id: 'cow', word: 'cow', meaning: '乳牛', icon: '🐮', category: 'animals', example: 'A fat cow is on this map.', exampleZh: '一隻胖胖的牛在地圖上。', source: 'Book 1.1 The Path on the Map' },
+      { id: 'horse', word: 'horse', meaning: '馬', icon: '🐴', category: 'animals', example: 'The vet can help out a horse.', exampleZh: '獸醫可以幫馬看病。', source: 'Book 1.2 A Vet' },
+      { id: 'mouse', word: 'mouse', meaning: '老鼠', icon: '🐭', category: 'animals', example: 'That is a small mouse.', exampleZh: '那是一隻小老鼠。', source: 'Book 1.1 The Path on the Map' },
+      { id: 'rabbit', word: 'rabbit', meaning: '兔子', icon: '🐰', category: 'animals', example: 'I see a rabbit by the tree.', exampleZh: '我看見樹邊有一隻兔子。', source: 'Book 1.1 The Path on the Map' },
+      { id: 'bird', word: 'bird', meaning: '鳥', icon: '🐦', category: 'animals', example: 'Bird likes to fly in the sky.', exampleZh: '小鳥喜歡在天空飛翔。', source: 'Book 1.1 Max, the Cat' },
+      { id: 'duck', word: 'duck', meaning: '鴨子', icon: '🦆', category: 'animals', example: 'Quack is a duck.', exampleZh: '呱呱是一隻鴨子。', source: 'Book 1.1 Quack' },
+      { id: 'hen', word: 'hen', meaning: '母雞', icon: '🐔', category: 'animals', example: 'Her hen ran up the path with boots.', exampleZh: '她的母雞帶著靴子跑上小路。', source: 'Book 1.2 Splash!' },
+      { id: 'fish', word: 'fish', meaning: '魚', icon: '🐟', category: 'animals', example: 'A big fish fell in the tub.', exampleZh: '一條大魚掉進了浴缸裡。', source: 'Book 1.2 The Bug Bath' },
+      { id: 'bug', word: 'bug', meaning: '蟲子', icon: '🐛', category: 'animals', example: 'The two bugs got in the tub.', exampleZh: '兩隻蟲子進到了浴缸裡。', source: 'Book 1.2 The Bug Bath' },
+      { id: 'ant', word: 'ant', meaning: '螞蟻', icon: '🐜', category: 'animals', example: 'It runs on six legs. It is an ant!', exampleZh: '牠有六隻腳到處跑，是一隻螞蟻！', source: 'Book 1.2 What Bug Is It?' },
+      { id: 'ladybug', word: 'ladybug', meaning: '瓢蟲', icon: '🐞', category: 'animals', example: 'It is red with black spots. It is a ladybug!', exampleZh: '牠是紅色的帶有黑斑點，是一隻瓢蟲！', source: 'Book 1.2 What Bug Is It?' },
+      { id: 'spider', word: 'spider', meaning: '蜘蛛', icon: '🕷️', category: 'animals', example: 'The spider uses its web to snag flies.', exampleZh: '蜘蛛用蜘蛛網捕捉蒼蠅。', source: 'Book 1.2 What Bug Is It?' },
+      { id: 'butterfly', word: 'butterfly', meaning: '蝴蝶', icon: '🦋', category: 'animals', example: 'It sips from flowers. It is a butterfly!', exampleZh: '牠吸食花蜜，是一隻美麗的蝴蝶！', source: 'Book 1.2 What Bug Is It?' },
+      { id: 'bee', word: 'bee', meaning: '蜜蜂', icon: '🐝', category: 'animals', example: 'It is a bee, so be careful!', exampleZh: '那是一隻蜜蜂，要小心喔！', source: 'Book 1.2 What Bug Is It?' },
+      { id: 'fly', word: 'fly', meaning: '蒼蠅', icon: '🪰', category: 'animals', example: 'The web can snag flies.', exampleZh: '蜘蛛網可以攔截蒼蠅。', source: 'Book 1.2 What Bug Is It?' },
+
+      // 2. Actions & Verbs (動作與休閒)
+      { id: 'nap', word: 'nap', meaning: '午睡、小睡', icon: '😴', category: 'actions', example: 'Max likes to nap on this mat.', exampleZh: 'Max 喜歡在這個地墊上小睡。', source: 'Book 1.1 Max, the Cat' },
+      { id: 'sit', word: 'sit', meaning: '坐下', icon: '🪑', category: 'actions', example: 'Quack can sit on your lap.', exampleZh: '呱呱可以坐在你的大腿上。', source: 'Book 1.1 Quack' },
+      { id: 'run', word: 'run', meaning: '奔跑', icon: '🏃', category: 'actions', example: 'The dog likes to run outside.', exampleZh: '小狗喜歡在外面奔跑。', source: 'Book 1.1 Max, the Cat' },
+      { id: 'hop', word: 'hop', meaning: '跳躍 (單腳跳/小跳)', icon: '🦘', category: 'actions', example: 'Dot the Bug can hop, hop, hop.', exampleZh: '蟲子 Dot 可以跳呀跳。', source: 'Book 1.2 Jack-in-the-Box' },
+      { id: 'swim', word: 'swim', meaning: '游泳', icon: '🏊', category: 'actions', example: 'Ken has a fish that swims in the tub.', exampleZh: 'Ken 有一條會在浴缸裡游泳的魚。', source: 'Book 1.2 Pets' },
+      { id: 'ride', word: 'ride', meaning: '搭乘、兜風', icon: '🚗', category: 'actions', example: 'Take a little ride, Pup.', exampleZh: '來搭一小段車兜風吧，小狗。', source: 'Book 1.2 One Good Pup' },
+      { id: 'kick', word: 'kick', meaning: '踢 (踢球)', icon: '⚽', category: 'actions', example: 'Bob kicked his legs in the tub.', exampleZh: 'Bob 在浴缸裡踢著他的腿。', source: 'Book 1.2 The Bug Bath' },
+      { id: 'hug', word: 'hug', meaning: '擁抱', icon: '🤗', category: 'actions', example: 'Pam gives Max a big hug.', exampleZh: 'Pam 給了 Max 一個大大的擁抱。', source: 'Book 1.1 Max, the Cat' },
+      { id: 'kiss', word: 'kiss', meaning: '親吻', icon: '😘', category: 'actions', example: 'I give my mom a sweet kiss.', exampleZh: '我給媽媽一個甜甜的親吻。', source: 'Book 1.1 Max, the Cat' },
+      { id: 'rub', word: 'rub', meaning: '搓揉、擦拭', icon: '🧼', category: 'actions', example: 'Rub, rub, rub-a-dub in the tub.', exampleZh: '在浴缸裡搓啊搓、洗個澡。', source: 'Book 1.2 Tub Song' },
+      { id: 'sniff', word: 'sniff', meaning: '聞、嗅', icon: '👃', category: 'actions', example: 'I sniff a great snack on a sill.', exampleZh: '我聞到窗台上有好吃的點心。', source: 'Book 1.2 Snacks' },
+      { id: 'sip', word: 'sip', meaning: '啜飲、吸蜜', icon: '🥤', category: 'actions', example: 'The butterfly sips from flowers.', exampleZh: '蝴蝶從花朵中吸取花蜜。', source: 'Book 1.2 What Bug Is It?' },
+      { id: 'pack', word: 'pack', meaning: '收拾、打包', icon: '🎒', category: 'actions', example: 'They pack the tan van.', exampleZh: '他們正在打包小貨車。', source: 'Book 1.1 Quack' },
+      { id: 'dig', word: 'dig', meaning: '挖掘', icon: '⛏️', category: 'actions', example: 'On Tuesday, Pig digs and digs.', exampleZh: '星期二，小豬挖呀挖。', source: 'Book 1.1 What Does Pig Do?' },
+      { id: 'mix', word: 'mix', meaning: '攪拌、混合', icon: '🥣', category: 'actions', example: 'Help me mix the lemon juice and water.', exampleZh: '幫我把檸檬汁和水混合在一起。', source: 'Book 1.1 Extracurricular' },
+      { id: 'tug', word: 'tug', meaning: '用力拉 (拔河)', icon: '🪢', category: 'actions', example: 'I can tug! Play tug with me, Pup.', exampleZh: '我會拉！小狗和我一起玩拔河吧。', source: 'Book 1.2 One Good Pup' },
+      { id: 'tap', word: 'tap', meaning: '輕敲、跳踢踏舞', icon: '👞', category: 'actions', example: 'On Thursday, Pig taps and taps.', exampleZh: '星期四，小豬跳起了踢踏舞。', source: 'Book 1.1 What Does Pig Do?' },
+      { id: 'bat', word: 'bat', meaning: '用球棒打球', icon: '⚾', category: 'actions', example: 'On Friday, Pig bats and bats.', exampleZh: '星期五，小豬揮棒打球。', source: 'Book 1.1 What Does Pig Do?' },
+      { id: 'sing', word: 'sing', meaning: '唱歌', icon: '🎤', category: 'actions', example: 'We can sing a happy song in the tub.', exampleZh: '我們可以在浴缸裡唱首快樂的歌。', source: 'Book 1.2 Tub Song' },
+      { id: 'buzz', word: 'buzz', meaning: '嗡嗡叫', icon: '🔉', category: 'actions', example: 'The busy bee will buzz and buzz.', exampleZh: '忙碌的小蜜蜂嗡嗡嗡地叫著。', source: 'Book 1.2 What Bug Is It?' },
+
+      // 3. Objects & Places (物品與地點)
+      { id: 'cap', word: 'cap', meaning: '鴨舌帽', icon: '🧢', category: 'objects', example: 'Pam has one cap.', exampleZh: 'Pam 有一頂鴨舌帽。', source: 'Book 1.1 Max, the Cat' },
+      { id: 'hat', word: 'hat', meaning: '寬邊帽', icon: '👒', category: 'objects', example: 'Nan packs the hat.', exampleZh: 'Nan 把帽子收拾好。', source: 'Book 1.1 Quack' },
+      { id: 'coat', word: 'coat', meaning: '外套、大衣', icon: '🧥', category: 'objects', example: 'Her dog ran up with her coat.', exampleZh: '她的小狗咬著她的外套跑過來。', source: 'Book 1.2 Splash!' },
+      { id: 'boots', word: 'boots', meaning: '雨靴、靴子', icon: '👢', category: 'objects', example: 'She put on her red boots.', exampleZh: '她穿上了她的紅雨鞋。', source: 'Book 1.2 Splash!' },
+      { id: 'wig', word: 'wig', meaning: '假髮', icon: '💇', category: 'objects', example: 'Pig picks a colorful wig.', exampleZh: '小豬挑選了一頂色彩鮮豔的假髮。', source: 'Book 1.1 What Does Pig Do?' },
+      { id: 'mat', word: 'mat', meaning: '地墊', icon: '🟩', category: 'objects', example: 'Max likes to nap on this mat.', exampleZh: 'Max 喜歡在這個地墊上小睡。', source: 'Book 1.1 Max, the Cat' },
+      { id: 'map', word: 'map', meaning: '地圖', icon: '🗺️', category: 'objects', example: 'We see a path on this map.', exampleZh: '我們在這張地圖上看見一條小路。', source: 'Book 1.1 The Path on the Map' },
+      { id: 'box', word: 'box', meaning: '盒子、箱子', icon: '📦', category: 'objects', example: 'Dot hops to the box.', exampleZh: 'Dot 跳到了盒子邊。', source: 'Book 1.2 Jack-in-the-Box' },
+      { id: 'bag', word: 'bag', meaning: '書包、袋子', icon: '🎒', category: 'objects', example: 'Did you pack your school bag?', exampleZh: '你的書包收拾好了嗎？', source: 'Book 1.1 Quack' },
+      { id: 'tub', word: 'tub', meaning: '澡盆、浴缸', icon: '🛁', category: 'objects', example: 'Al and Bob saw a big tub.', exampleZh: 'Al 和 Bob 看到了一個大浴缸。', source: 'Book 1.2 The Bug Bath' },
+      { id: 'ship', word: 'ship', meaning: '大船', icon: '🚢', category: 'objects', example: 'Look at the big ship! It has sails.', exampleZh: '看那艘大船！它有大大的風帆。', source: 'Book 1.1 Ships' },
+      { id: 'van', word: 'van', meaning: '箱型小貨車', icon: '🚐', category: 'objects', example: 'That is the tan van.', exampleZh: '那就是那輛棕黃色的小貨車。', source: 'Book 1.1 Quack' },
+      { id: 'shed', word: 'shed', meaning: '小儲藏室、木棚', icon: '🛖', category: 'objects', example: 'Meg went into the shed.', exampleZh: 'Meg 走進了小木棚裡。', source: 'Book 1.2 Splash!' },
+      { id: 'barn', word: 'barn', meaning: '穀倉', icon: '🏚️', category: 'objects', example: 'It rained on the big red barn.', exampleZh: '雨落在紅色的大穀倉上。', source: 'Book 1.2 Splash!' },
+      { id: 'web', word: 'web', meaning: '蜘蛛網', icon: '🕸️', category: 'objects', example: 'I see a bug in the web.', exampleZh: '我看見蜘蛛網上有一隻蟲。', source: 'Book 1.2 What Bug Is It?' },
+
+      // 4. Nature & Food (自然與食物)
+      { id: 'sun', word: 'sun', meaning: '太陽', icon: '☀️', category: 'nature', example: 'A fun bath in the warm sun!', exampleZh: '在溫暖的太陽下舒服洗澡！', source: 'Book 1.2 Tub Song' },
+      { id: 'rain', word: 'rain', meaning: '下雨、雨水', icon: '🌧️', category: 'nature', example: 'It rained on Meg and her pets.', exampleZh: '雨下在 Meg 和她的寵物們身上。', source: 'Book 1.2 Splash!' },
+      { id: 'water', word: 'water', meaning: '水', icon: '💧', category: 'nature', example: 'Add one cup of clean water.', exampleZh: '加入一杯乾淨的飲用水。', source: 'Book 1.1 Recipe' },
+      { id: 'hill', word: 'hill', meaning: '小山丘', icon: '⛰️', category: 'nature', example: 'The ant digs a small hill.', exampleZh: '螞蟻堆築了一座小土丘。', source: 'Book 1.2 What Bug Is It?' },
+      { id: 'path', word: 'path', meaning: '小徑、小路', icon: '🛤️', category: 'nature', example: 'We can go down the path.', exampleZh: '我們可以沿著這條小路走下去。', source: 'Book 1.1 The Path on the Map' },
+      { id: 'flower', word: 'flower', meaning: '花朵', icon: '🌸', category: 'nature', example: 'The butterfly sips from flowers.', exampleZh: '蝴蝶吸取花朵上的花蜜。', source: 'Book 1.2 What Bug Is It?' },
+      { id: 'snack', word: 'snack', meaning: '點心', icon: '🍪', category: 'nature', example: 'I sniff a great snack on the sill.', exampleZh: '我聞到窗台上美味的點心。', source: 'Book 1.2 Snacks' },
+      { id: 'bread', word: 'bread', meaning: '麵包', icon: '🍞', category: 'nature', example: 'Slip me some fresh bread.', exampleZh: '遞給我幾片新鮮的吐司麵包。', source: 'Book 1.2 Snacks' },
+      { id: 'jam', word: 'jam', meaning: '果醬', icon: '🍯', category: 'nature', example: 'Dip the bread in sweet jam.', exampleZh: '把麵包沾上甜甜的果醬。', source: 'Book 1.2 Snacks' },
+      { id: 'ham', word: 'ham', meaning: '火腿', icon: '🍖', category: 'nature', example: 'Pass me a bit of that ham.', exampleZh: '請遞給我一小片火腿。', source: 'Book 1.2 Snacks' },
+      { id: 'lemon', word: 'lemon', meaning: '檸檬', icon: '🍋', category: 'nature', example: 'First, squeeze the lemons.', exampleZh: '首先，先把檸檬擠出汁。', source: 'Book 1.1 Recipe' },
+
+      // 5. Feelings & Adjectives (形容詞與感受)
+      { id: 'happy', word: 'happy', meaning: '快樂的', icon: '😄', category: 'feelings', example: 'Bird is happy in the sky.', exampleZh: '小鳥在天空飛得好快樂。', source: 'Book 1.1 Max, the Cat' },
+      { id: 'sad', word: 'sad', meaning: '傷心的、難過的', icon: '😢', category: 'feelings', example: 'Pam is sad and Max is sad.', exampleZh: 'Pam 很難過，Max 也很難過。', source: 'Book 1.1 Max, the Cat' },
+      { id: 'mad', word: 'mad', meaning: '生氣的', icon: '😡', category: 'feelings', example: 'Pam is mad at Max.', exampleZh: 'Pam 對 Max 感到很生氣。', source: 'Book 1.1 Max, the Cat' },
+      { id: 'good', word: 'good', meaning: '好的、棒的', icon: '👍', category: 'feelings', example: 'You are one good Pup!', exampleZh: '你是一隻非常棒的小狗！', source: 'Book 1.2 One Good Pup' },
+      { id: 'bad', word: 'bad', meaning: '壞的、不乖的', icon: '👎', category: 'feelings', example: 'You are sad, but not bad.', exampleZh: '你很難過，但你並不壞喔。', source: 'Book 1.2 One Good Pup' },
+      { id: 'wet', word: 'wet', meaning: '潮濕的、淋濕的', icon: '💦', category: 'feelings', example: 'It is so wet out today.', exampleZh: '今天外面真的好濕好濕。', source: 'Book 1.2 One Good Pup' },
+      { id: 'dirty', word: 'dirty', meaning: '髒兮兮的', icon: '🦨', category: 'feelings', example: 'We are very dirty, said Al.', exampleZh: '我們全身都好髒喔，Al 說。', source: 'Book 1.2 The Bug Bath' },
+      { id: 'hot', word: 'hot', meaning: '熱的、炎熱的', icon: '🔥', category: 'feelings', example: 'The warm bath was hot.', exampleZh: '舒服的洗澡水好熱好溫暖。', source: 'Book 1.2 The Bug Bath' },
+      { id: 'big', word: 'big', meaning: '大的', icon: '🐘', category: 'feelings', example: 'That is a big ship!', exampleZh: '那是一艘超級大的大船！', source: 'Book 1.1 Ships' },
+      { id: 'small', word: 'small', meaning: '小的', icon: '🐜', category: 'feelings', example: 'Sit in this small ship with me.', exampleZh: '和我一起坐在這艘小船裡吧。', source: 'Book 1.2 One Good Pup' },
+      { id: 'fat', word: 'fat', meaning: '胖胖的、圓滾滾的', icon: '🐷', category: 'feelings', example: 'A fat cow is on this map.', exampleZh: '一隻圓滾滾的胖牛在地圖上。', source: 'Book 1.1 The Path on the Map' },
+      { id: 'thin', word: 'thin', meaning: '細瘦的', icon: '🪡', category: 'feelings', example: 'The spider has thin legs.', exampleZh: '蜘蛛有著長長細細的腳。', source: 'Book 1.2 What Bug Is It?' },
+      { id: 'sick', word: 'sick', meaning: '生病的', icon: '🤒', category: 'feelings', example: 'The vet can look at a sick pig.', exampleZh: '獸醫可以幫生病的小豬檢查。', source: 'Book 1.2 A Vet' },
+
+      // 6. Days of the Week (一週星期)
+      { id: 'monday', word: 'Monday', meaning: '星期一', icon: '📅', category: 'days', example: 'On Monday, Pig picks a wig.', exampleZh: '星期一，小豬挑選了一頂假髮。', source: 'Book 1.1 What Does Pig Do?' },
+      { id: 'tuesday', word: 'Tuesday', meaning: '星期二', icon: '📅', category: 'days', example: 'On Tuesday, Pig digs and digs.', exampleZh: '星期二，小豬挖呀挖。', source: 'Book 1.1 What Does Pig Do?' },
+      { id: 'wednesday', word: 'Wednesday', meaning: '星期三', icon: '📅', category: 'days', example: 'On Wednesday, Pig kicks and kicks.', exampleZh: '星期三，小豬踢球踢呀踢。', source: 'Book 1.1 What Does Pig Do?' },
+      { id: 'thursday', word: 'Thursday', meaning: '星期四', icon: '📅', category: 'days', example: 'On Thursday, Pig taps and taps.', exampleZh: '星期四，小豬跳起了踢踏舞。', source: 'Book 1.1 What Does Pig Do?' },
+      { id: 'friday', word: 'Friday', meaning: '星期五', icon: '📅', category: 'days', example: 'On Friday, Pig bats and bats.', exampleZh: '星期五，小豬揮棒打棒球。', source: 'Book 1.1 What Does Pig Do?' },
+      { id: 'saturday', word: 'Saturday', meaning: '星期六', icon: '🎈', category: 'days', example: 'On Saturday, Pig does laps.', exampleZh: '星期六，小豬一圈一圈跑步或游泳。', source: 'Book 1.1 What Does Pig Do?' },
+      { id: 'sunday', word: 'Sunday', meaning: '星期日', icon: '☀️', category: 'days', example: 'On Sunday, Pig naps peacefully.', exampleZh: '星期天，小豬舒舒服服睡午覺。', source: 'Book 1.1 What Does Pig Do?' },
+
+      // 7. Everyday Useful Phrases (教材精選片語與重要名詞)
+      { id: 'vet', word: 'vet', meaning: '獸醫', icon: '👩‍⚕️', category: 'phrases', example: 'A vet can care for your pet.', exampleZh: '獸醫能悉心照顧你的寵物。', source: 'Book 1.2 A Vet' },
+      { id: 'checkup', word: 'checkup', meaning: '健康檢查', icon: '🩺', category: 'phrases', example: 'She gives the dog a health checkup.', exampleZh: '她幫小狗做了詳細的健康檢查。', source: 'Book 1.2 A Vet' },
+      { id: 'shot', word: 'shot', meaning: '打針、注射', icon: '💉', category: 'phrases', example: 'Muff gets a shot at the vet.', exampleZh: '小狗 Muff 在獸醫那裡打了一針預防針。', source: 'Book 1.2 At the Vet' },
+      { id: 'pill', word: 'pill', meaning: '藥丸', icon: '💊', category: 'phrases', example: 'Puff takes a pill to feel well.', exampleZh: '貓咪 Puff 吃了一顆藥丸就會康復了。', source: 'Book 1.2 At the Vet' },
+      { id: 'care_for', word: 'care for', meaning: '細心照顧', icon: '❤️', category: 'phrases', example: 'A vet can care for our pets.', exampleZh: '獸醫師可以好好照顧生病的寵物。', source: 'Book 1.2 A Vet' },
+      { id: 'help_out', word: 'help out', meaning: '熱心幫忙', icon: '🤝', category: 'phrases', example: 'She can help out a sick horse.', exampleZh: '她能夠熱心救治生病的大馬。', source: 'Book 1.2 A Vet' },
+      { id: 'not_at_all', word: 'not at all', meaning: '一點也不...', icon: '🙅', category: 'phrases', example: 'It is not fun at all to be wet!', exampleZh: '全身被雨淋濕一點都不好玩！', source: 'Book 1.2 Splash!' },
+      { id: 'let_go', word: 'let go', meaning: '放開、鬆手', icon: '✋', category: 'phrases', example: 'Let go! said the little bug.', exampleZh: '快放手！小蟲子大聲喊著。', source: 'Book 1.2 The Bug Bath' }
+    ];
+
+    // Category Metadata configuration
+    const CATEGORIES_CONFIG = [
+      { key: 'animals', name: '🐾 動物與昆蟲世界', icon: '🐱', bgColor: 'bg-emerald-100 text-emerald-800' },
+      { key: 'actions', name: '🏃 活潑動作與休閒', icon: '⚽', bgColor: 'bg-amber-100 text-amber-800' },
+      { key: 'objects', name: '🎒 日常物品與裝備', icon: '🧢', bgColor: 'bg-sky-100 text-sky-800' },
+      { key: 'nature', name: '🌲 自然戶外與美食', icon: '☀️', bgColor: 'bg-lime-100 text-lime-800' },
+      { key: 'feelings', name: '🌈 心情感受與形容', icon: '😄', bgColor: 'bg-rose-100 text-rose-800' },
+      { key: 'days', name: '📅 快樂星期名稱', icon: '🗓️', bgColor: 'bg-indigo-100 text-indigo-800' },
+      { key: 'phrases', name: '🌟 獸醫與實用片語', icon: '🩺', bgColor: 'bg-purple-100 text-purple-800' }
+    ];
+
+    createApp({
+      setup() {
+        // All words dataset
+        const allWords = ref(RAW_VOCABULARY);
+
+        // Sound effect state
+        const soundEnabled = ref(true);
+
+        // Current navigation view: 'categories' | 'flashcards' | 'spelling' | 'mistakes'
+        const currentView = ref('categories');
+
+        // Active selected category ('all' or specific key)
+        const currentCategoryKey = ref('animals');
+
+        // In-Memory Learning Tracking (Strictly NO localStorage per specification)
+        // learnedWordIds: set of word ids that user flipped and marked as learned
+        const learnedWordIds = ref(new Set());
+        
+        // quizPassedWordIds: set of word ids that user successfully spelled
+        const quizPassedWordIds = ref(new Set());
+
+        // mistakeMap: { [wordId]: mistakeCount }
+        const mistakeMap = ref(new Map());
+
+        // Reset modal state
+        const showResetModal = ref(false);
+
+        // ---------------- FLASHCARD STATE ----------------
+        const currentCardIndex = ref(0);
+        const isCardFlipped = ref(false);
+
+        // ---------------- SPELLING QUIZ STATE ----------------
+        const currentQuizIndex = ref(0);
+        const userSpellingInput = ref('');
+        const quizAttemptsLeft = ref(3); // 3-strikes rule
+        const quizScore = ref(0);
+        const quizHintActive = ref(false);
+        const quizAnswerRevealed = ref(false);
+        const quizFeedbackMessage = ref('');
+        const quizFeedbackIsError = ref(false);
+        const isIntensiveQuiz = ref(false); // Testing mistake notebook words only
+        const quizInputRef = ref(null);
+
+        const audioCtx = (typeof window !== 'undefined' && (window.AudioContext || window.webkitAudioContext)) 
+          ? new (window.AudioContext || window.webkitAudioContext)() 
+          : null;
+
+        const playTone = (type) => {
+          if (!soundEnabled.value || !audioCtx) return;
+          try {
+            if (audioCtx.state === 'suspended') {
+              audioCtx.resume();
+            }
+            const osc = audioCtx.createOscillator();
+            const gain = audioCtx.createGain();
+            osc.connect(gain);
+            gain.connect(audioCtx.destination);
+
+            const now = audioCtx.currentTime;
+
+            if (type === 'flip') {
+              // Quick swoosh/pop
+              osc.type = 'triangle';
+              osc.frequency.setValueAtTime(320, now);
+              osc.frequency.exponentialRampToValueAtTime(640, now + 0.08);
+              gain.gain.setValueAtTime(0.15, now);
+              gain.gain.linearRampToValueAtTime(0.01, now + 0.08);
+              osc.start(now);
+              osc.stop(now + 0.08);
+            } else if (type === 'correct') {
+              // Bright cheerful chord arpeggio
+              const chord = [523.25, 659.25, 783.99, 1046.50]; // C5, E5, G5, C6
+              chord.forEach((freq, idx) => {
+                const subOsc = audioCtx.createOscillator();
+                const subGain = audioCtx.createGain();
+                subOsc.type = 'sine';
+                subOsc.frequency.setValueAtTime(freq, now + idx * 0.06);
+                subGain.connect(audioCtx.destination);
+                subOsc.connect(subGain);
+                subGain.gain.setValueAtTime(0.18, now + idx * 0.06);
+                subGain.gain.exponentialRampToValueAtTime(0.001, now + idx * 0.06 + 0.28);
+                subOsc.start(now + idx * 0.06);
+                subOsc.stop(now + idx * 0.06 + 0.3);
+              });
+            } else if (type === 'wrong') {
+              // Gentle boing
+              osc.type = 'sawtooth';
+              osc.frequency.setValueAtTime(260, now);
+              osc.frequency.exponentialRampToValueAtTime(140, now + 0.25);
+              gain.gain.setValueAtTime(0.15, now);
+              gain.gain.linearRampToValueAtTime(0.01, now + 0.25);
+              osc.start(now);
+              osc.stop(now + 0.25);
+            } else if (type === 'star') {
+              // Fanfare sparkle
+              osc.type = 'sine';
+              osc.frequency.setValueAtTime(880, now);
+              osc.frequency.exponentialRampToValueAtTime(1320, now + 0.2);
+              gain.gain.setValueAtTime(0.2, now);
+              gain.gain.linearRampToValueAtTime(0.01, now + 0.2);
+              osc.start(now);
+              osc.stop(now + 0.2);
+            }
+          } catch (e) {
+            console.debug('Audio context warning:', e);
+          }
+        };
+
+        // Text-to-Speech function using Web Speech API
+        const speak = (text) => {
+          if (!('speechSynthesis' in window)) return;
+          try {
+            window.speechSynthesis.cancel();
+            const utterance = new SpeechSynthesisUtterance(text);
+            utterance.lang = 'en-US';
+            utterance.rate = 0.85; // Slightly slower for kids to hear clearly
+            utterance.pitch = 1.05;
+            window.speechSynthesis.speak(utterance);
+          } catch (e) {
+            console.debug('SpeechSynthesis error:', e);
+          }
+        };
+
+        const toggleSound = () => {
+          soundEnabled.value = !soundEnabled.value;
+        };
+
+        const categories = computed(() => {
+          return CATEGORIES_CONFIG.map(cat => ({
+            ...cat,
+            words: allWords.value.filter(w => w.category === cat.key)
+          }));
+        });
+
+        const currentCategoryName = computed(() => {
+          if (isIntensiveQuiz.value) return '🎯 錯題強化特訓';
+          if (currentCategoryKey.value === 'all') return '🌟 全部單字總動員';
+          const found = CATEGORIES_CONFIG.find(c => c.key === currentCategoryKey.value);
+          return found ? found.name : '精選單字';
+        });
+
+        // Active words for current Flashcard session
+        const activeWordList = computed(() => {
+          if (currentCategoryKey.value === 'all') {
+            return allWords.value;
+          }
+          return allWords.value.filter(w => w.category === currentCategoryKey.value);
+        });
+
+        const currentWord = computed(() => {
+          const list = activeWordList.value;
+          if (!list || list.length === 0) return allWords.value[0];
+          return list[currentCardIndex.value] || list[0];
+        });
+
+        // Quiz words list (can be category words or intensive mistake list)
+        const quizWordList = computed(() => {
+          if (isIntensiveQuiz.value) {
+            return mistakeList.value;
+          }
+          if (currentCategoryKey.value === 'all') {
+            return allWords.value;
+          }
+          return allWords.value.filter(w => w.category === currentCategoryKey.value);
+        });
+
+        const currentQuizWord = computed(() => {
+          const list = quizWordList.value;
+          if (!list || list.length === 0) return allWords.value[0];
+          return list[currentQuizIndex.value] || list[0];
+        });
+
+        // Mistake Notebook List
+        const mistakeList = computed(() => {
+          const list = [];
+          for (const [id, count] of mistakeMap.value.entries()) {
+            const wordObj = allWords.value.find(w => w.id === id);
+            if (wordObj) {
+              list.push({ ...wordObj, mistakeCount: count });
+            }
+          }
+          return list;
+        });
+
+        // Overall progress: 50% flashcards mastery + 50% spelling passed
+        const overallProgress = computed(() => {
+          const total = allWords.value.length;
+          if (total === 0) return 0;
+          const learnedWeight = (learnedWordIds.value.size / total) * 50;
+          const quizWeight = (quizPassedWordIds.value.size / total) * 50;
+          return Math.min(100, Math.round(learnedWeight + quizWeight));
+        });
+
+        const totalLearnedCount = computed(() => learnedWordIds.value.size);
+        const totalQuizPassedCount = computed(() => quizPassedWordIds.value.size);
+
+        // Category specific progress calculations
+        const getCategoryLearnedCount = (catKey) => {
+          const words = allWords.value.filter(w => w.category === catKey);
+          return words.filter(w => learnedWordIds.value.has(w.id)).length;
+        };
+
+        const getCategoryQuizPassedCount = (catKey) => {
+          const words = allWords.value.filter(w => w.category === catKey);
+          return words.filter(w => quizPassedWordIds.value.has(w.id)).length;
+        };
+
+        const getCategoryProgress = (catKey) => {
+          const words = allWords.value.filter(w => w.category === catKey);
+          if (words.length === 0) return 0;
+          const learned = getCategoryLearnedCount(catKey);
+          const passed = getCategoryQuizPassedCount(catKey);
+          return Math.round(((learned + passed) / (words.length * 2)) * 100);
+        };
+
+        const activeCategoryLearnedPercent = computed(() => {
+          if (currentCategoryKey.value === 'all') {
+            return Math.round((learnedWordIds.value.size / allWords.value.length) * 100);
+          }
+          return getCategoryProgress(currentCategoryKey.value);
+        });
+
+        const activeCategoryQuizPercent = computed(() => {
+          const list = quizWordList.value;
+          if (list.length === 0) return 100;
+          return Math.round(((currentQuizIndex.value) / list.length) * 100);
+        });
+
+        const startFlashcards = (catKey = 'animals') => {
+          currentCategoryKey.value = catKey;
+          currentCardIndex.value = 0;
+          isCardFlipped.value = false;
+          currentView.value = 'flashcards';
+          playTone('flip');
+          nextTick(() => {
+            speak(currentWord.value.word);
+          });
+        };
+
+        const toggleCardFlip = () => {
+          isCardFlipped.value = !isCardFlipped.value;
+          playTone('flip');
+        };
+
+        const nextCard = () => {
+          if (currentCardIndex.value < activeWordList.value.length - 1) {
+            currentCardIndex.value++;
+            isCardFlipped.value = false;
+            playTone('flip');
+            nextTick(() => speak(currentWord.value.word));
+          } else {
+            // Reached end of list
+            triggerConfetti();
+            playTone('star');
+            isCardFlipped.value = false;
+            currentCardIndex.value = 0;
+          }
+        };
+
+        const prevCard = () => {
+          if (currentCardIndex.value > 0) {
+            currentCardIndex.value--;
+            isCardFlipped.value = false;
+            playTone('flip');
+            nextTick(() => speak(currentWord.value.word));
+          }
+        };
+
+        const isWordLearned = (id) => learnedWordIds.value.has(id);
+
+        const markAsLearned = (id) => {
+          if (learnedWordIds.value.has(id)) {
+            learnedWordIds.value.delete(id);
+          } else {
+            learnedWordIds.value.add(id);
+            playTone('correct');
+          }
+        };
+
+        const startSpellingQuiz = (catKey = 'animals') => {
+          isIntensiveQuiz.value = false;
+          currentCategoryKey.value = catKey;
+          currentQuizIndex.value = 0;
+          quizScore.value = 0;
+          currentView.value = 'spelling';
+          resetQuestionState();
+        };
+
+        const startIntensiveQuiz = () => {
+          if (mistakeList.value.length === 0) return;
+          isIntensiveQuiz.value = true;
+          currentQuizIndex.value = 0;
+          quizScore.value = 0;
+          currentView.value = 'spelling';
+          resetQuestionState();
+        };
+
+        const resetQuestionState = () => {
+          userSpellingInput.value = '';
+          quizAttemptsLeft.value = 3;
+          quizHintActive.value = false;
+          quizAnswerRevealed.value = false;
+          quizFeedbackMessage.value = '';
+          quizFeedbackIsError.value = false;
+          playTone('flip');
+          nextTick(() => {
+            if (quizInputRef.value) {
+              quizInputRef.value.focus();
+            }
+            speak(currentQuizWord.value.word);
+          });
+        };
+
+        // Letter hint (first and last letter exposed on strike 2)
+        const letterHintString = computed(() => {
+          const w = currentQuizWord.value.word.trim();
+          if (w.length <= 2) {
+            return `${w[0].toUpperCase()} _`;
+          }
+          const chars = w.split('');
+          return chars.map((c, i) => {
+            if (c === ' ' || c === '-') return c;
+            if (i === 0 || i === chars.length - 1) return c.toUpperCase();
+            return '_';
+          }).join(' ');
+        });
+
+        // Blanks out the word in the example sentence for quiz
+        const quizSentenceBlank = computed(() => {
+          const ex = currentQuizWord.value.example;
+          const target = currentQuizWord.value.word;
+          const reg = new RegExp(`\\b${target}\\b`, 'gi');
+          return ex.replace(reg, ' [ ________ ] ');
+        });
+
+        // Generates clickable scrambled letter tiles plus a few distractors
+        const availableLetterTiles = computed(() => {
+          const w = currentQuizWord.value.word.toLowerCase().replace(/[^a-z]/g, '');
+          const set = w.split('');
+          const distractors = ['a', 'e', 'i', 'o', 'u', 's', 't', 'p', 'm'];
+          // Add 2-3 distractors if word is short
+          while (set.length < 7) {
+            const randomLetter = distractors[Math.floor(Math.random() * distractors.length)];
+            set.push(randomLetter);
+          }
+          // Shuffle
+          return set.sort(() => Math.random() - 0.5).map(l => l.toUpperCase());
+        });
+
+        const addLetter = (letter) => {
+          userSpellingInput.value += letter;
+          playTone('flip');
+        };
+
+        const deleteLetter = () => {
+          if (userSpellingInput.value.length > 0) {
+            userSpellingInput.value = userSpellingInput.value.slice(0, -1);
+            playTone('flip');
+          }
+        };
+
+        const submitQuizAnswer = () => {
+          if (quizAnswerRevealed.value) return;
+
+          const target = currentQuizWord.value.word.trim().toLowerCase().replace(/[^a-z]/g, '');
+          const input = userSpellingInput.value.trim().toLowerCase().replace(/[^a-z]/g, '');
+
+          if (!input) {
+            quizFeedbackMessage.value = '請先拼寫出單字再送出喔！';
+            quizFeedbackIsError.value = true;
+            return;
+          }
+
+          if (input === target) {
+            // Correct answer!
+            playTone('correct');
+            triggerConfetti();
+            quizScore.value += 10;
+            quizPassedWordIds.value.add(currentQuizWord.value.id);
+            quizFeedbackIsError.value = false;
+
+            // If in intensive quiz mode, remove from mistake notebook!
+            if (isIntensiveQuiz.value || mistakeMap.value.has(currentQuizWord.value.id)) {
+              mistakeMap.value.delete(currentQuizWord.value.id);
+              quizFeedbackMessage.value = '🎉 太厲害了！答對了，此單字已自錯題本消滅移出！✨';
+            } else {
+              quizFeedbackMessage.value = '🎉 答對了！太聰明了！';
+            }
+
+            setTimeout(() => {
+              nextQuizQuestion();
+            }, 1300);
+
+          } else {
+            // Incorrect answer
+            quizAttemptsLeft.value--;
+            playTone('wrong');
+            quizFeedbackIsError.value = true;
+
+            if (quizAttemptsLeft.value === 2) {
+              // 1st error -> Encouraging prompt
+              quizFeedbackMessage.value = '差一點點！仔細想想，再試一次看看喔！💪';
+            } else if (quizAttemptsLeft.value === 1) {
+              // 2nd error -> Reveal first & last letters hint!
+              quizHintActive.value = true;
+              quizFeedbackMessage.value = '💡 別急！看看上方的頭尾字母提示，再試最後一次！';
+            } else {
+              // 3rd error -> Record in mistake notebook & reveal answer
+              const wordId = currentQuizWord.value.id;
+              const count = (mistakeMap.value.get(wordId) || 0) + 1;
+              mistakeMap.value.set(wordId, count);
+
+              quizAnswerRevealed.value = true;
+              quizFeedbackMessage.value = '已經記錄到錯題本，等等可以到「錯題強化」加強練習喔！';
+            }
+          }
+        };
+
+        const nextQuizQuestion = () => {
+          if (currentQuizIndex.value < quizWordList.value.length - 1) {
+            currentQuizIndex.value++;
+            resetQuestionState();
+          } else {
+            // Quiz completed!
+            triggerConfetti();
+            playTone('star');
+            if (isIntensiveQuiz.value) {
+              currentView.value = 'mistakes';
+            } else {
+              currentView.value = 'categories';
+            }
+          }
+        };
+
+        const goToMistakes = () => {
+          currentView.value = 'mistakes';
+          playTone('flip');
+        };
+
+        const quickRemoveMistake = (id) => {
+          mistakeMap.value.delete(id);
+          playTone('flip');
+        };
+
+        const openResetModal = () => {
+          showResetModal.value = true;
+        };
+
+        const confirmResetProgress = () => {
+          learnedWordIds.value.clear();
+          quizPassedWordIds.value.clear();
+          mistakeMap.value.clear();
+          currentCardIndex.value = 0;
+          currentQuizIndex.value = 0;
+          showResetModal.value = false;
+          currentView.value = 'categories';
+          playTone('star');
+        };
+
+        // Celebration Confetti effect
+        const triggerConfetti = () => {
+          if (typeof confetti === 'function') {
+            confetti({
+              particleCount: 50,
+              spread: 60,
+              origin: { y: 0.65 }
+            });
+          }
+        };
+
+        // Auto announce first word on load
+        onMounted(() => {
+          // Pre-populate category name for all words
+          allWords.value.forEach(w => {
+            const found = CATEGORIES_CONFIG.find(c => c.key === w.category);
+            w.categoryName = found ? found.name : '精選單字';
+          });
+        });
+
+        return {
+          allWords,
+          categories,
+          soundEnabled,
+          currentView,
+          currentCategoryKey,
+          currentCategoryName,
+          activeWordList,
+          currentWord,
+          currentCardIndex,
+          isCardFlipped,
+          quizWordList,
+          currentQuizWord,
+          currentQuizIndex,
+          userSpellingInput,
+          quizAttemptsLeft,
+          quizScore,
+          quizHintActive,
+          quizAnswerRevealed,
+          quizFeedbackMessage,
+          quizFeedbackIsError,
+          isIntensiveQuiz,
+          letterHintString,
+          quizSentenceBlank,
+          availableLetterTiles,
+          mistakeList,
+          overallProgress,
+          totalLearnedCount,
+          totalQuizPassedCount,
+          activeCategoryLearnedPercent,
+          activeCategoryQuizPercent,
+          showResetModal,
+          quizInputRef,
+          toggleSound,
+          speak,
+          getCategoryLearnedCount,
+          getCategoryQuizPassedCount,
+          getCategoryProgress,
+          startFlashcards,
+          toggleCardFlip,
+          nextCard,
+          prevCard,
+          isWordLearned,
+          markAsLearned,
+          startSpellingQuiz,
+          startIntensiveQuiz,
+          addLetter,
+          deleteLetter,
+          submitQuizAnswer,
+          nextQuizQuestion,
+          goToMistakes,
+          quickRemoveMistake,
+          openResetModal,
+          confirmResetProgress
+        };
+      }
+    }).mount('#app');
+  </script>
+</body>
+</html>
